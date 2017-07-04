@@ -29,15 +29,6 @@ run-nginx() {
     app-start SIGTERM "$@"
     pid=$!
 
-    # Wait for app to start.
-    if is-enabled "$NGINX_WAIT_ENABLED"; then
-        while [[ ! -e "$NGINX_WAIT_FILE" ]]; do
-            at app-waiting
-            sleep 1
-        done
-        at app-initialized
-    fi
-
     # Create logs dir. NGINX insists on creating logs/error.log even
     # though it will remain an empty file, with actual logging on stderr.
     mkdir -p logs
@@ -47,6 +38,15 @@ run-nginx() {
 
     # Don't exit top script until all subprocesses are done.
     trap '' SIGTERM
+
+    # Wait for app to start.
+    if is-enabled "$NGINX_WAIT_ENABLED"; then
+        while [[ ! -e "$NGINX_WAIT_FILE" ]]; do
+            at app-waiting
+            sleep 1
+        done
+        at app-initialized
+    fi
 
     # This read will block the process waiting on a msg to be put into the
     # fifo. If any of the processes defined above should exit, a msg will be
